@@ -1,0 +1,102 @@
+#!/bin/bash
+
+# variables to customize behaviour
+CHATFILE=/tmp/.schatlog.main
+
+# test sed binary
+echo "null" | sed -u "s/n/f/g" >& /dev/null
+if [ $? -eq 0 ]; then alias mysed="sed"; fi
+
+echo "null" | gsed -u "s/n/f/g" >& /dev/null
+if [ $? -eq 0 ]; then alias mysed="gsed"; fi
+
+alias mysed >& /dev/null || { echo "No valid sed found. (hint: brew install gnu-sed)"; exit 1; }
+
+logdate () {
+    if [ "$1" == "help" ]; then printf "Print current log time stamp."; return; fi
+    date +"%Y-%m-%d %T"
+}
+
+help () {
+    if [ "$1" == "help" ]; then printf "\tPrint this help message."; return; fi
+    for func in `typeset -F | cut -d" " -f3`; do
+    	printf "/$func \t\t`$func help`\n" > $OUT
+    done
+    
+}
+
+names () {
+    if [ "$1" == "help" ]; then printf "\tList active users."; return; fi
+    printf "active users: \n"
+    ls /tmp/.schat.*.fifo | cut -d. -f3 | sed "s/^/  /g"
+}
+
+nick () {
+    if [ "$1" == "help" ]; then printf "\tRename yourself."; return; fi
+    if [ ${#1} -le 2 ]; then printf "This name seems a bit short...\n"> $OUT; return; fi
+    OLD_CHATUSER=$CHATUSER
+    COLOR="\e[1;"$(($RANDOM % 6 + 31))"m"
+    CHATUSER=$COLOR$1
+    PROMPT="[$CHATUSER\e[0m] "
+    if [ "$OLD_CHATUSER" != "" ]; then
+        printf "\e[1;37m`logdate` | $OLD_CHATUSER\e[1;37m is now called $CHATUSER\e[37m.\e[0m\n" >> $CHATFILE
+    fi
+}
+
+reset () {
+    if [ "$1" == "help" ]; then printf "\tReset chat listen process."; return; fi
+    if [ $CHAT_PID ]; then disown $CHAT_PID && kill $CHAT_PID; fi
+        # line-beginning: move cursor one line up; line-ending: move cursor one line down
+    tail -f -n 1 $CHATFILE | gsed -u 's/^/\r\o033[1A/g; s/$/\o033[1B/g'> $OUT &
+    CHAT_PID=$!
+}
+
+clear () {
+    if [ "$1" == "help" ]; then printf "\tWipe the chatlog."; return; fi
+    printf "\e[1;37m`logdate` | $CHATUSER\e[1;37m cleared logfile.\n" > $CHATFILE
+}
+
+bye () {
+    if [ "$1" == "help" ]; then printf "\tGracefully leave this chat."; return; fi
+	disown $CHAT_PID; kill $CHAT_PID
+	printf "\e[1K\rSee you soon, $CHATUSER!\n" > $OUT
+	disown $OUT_PID; kill $OUT_PID
+	rm -f $OUT
+	printf "\e[1;37m`logdate` | $CHATUSER\e[1;37m left.\n" >> $CHATFILE
+    if [ -z $1 ]; then exit 0; fi
+}
+
+# hidden classic irc commands
+me () {
+    if [ "$1" == "help" ]; then printf "\e[1K\e[1A"; return; fi # delete everything printed in this line, go one line up
+    printf "\e[1;37m`logdate` | $CHATUSER\e[1;37m $*\e[0m\n" >> $CHATFILE
+}
+
+slap () {
+    if [ "$1" == "help" ]; then printf "\e[1K\e[1A"; return; fi # delete everything printed in this line, go one line up
+    printf "\e[1;37m`logdate` | $CHATUSER\e[1;37m slaps $1 around a bit with a large trout.\e[0m\n" >> $CHATFILE
+}
+
+trap bye INT
+
+nick $1 $USER # if $1 is empty, this call defaults to system username.
+printf ">> Welcome to local $HOSTNAME chat, $CHATUSER\e[0m! Enter /help for more...\n\n"
+printf "\e[1;37m`logdate` | $CHATUSER\e[1;37m joined.\e[0m\n" >> $CHATFILE
+
+OUT=/tmp/.schat.$1.fifo
+rm -f $OUT; mkfifo $OUT; cat $OUT &
+OUT_PID=$!
+
+reset
+
+while true; do
+    # printf "\e[0m\e[2B$PROMPT" > $OUT # currently not working
+	read msg
+    printf "\e[A\e[2K" > $OUT
+	if [ "$msg" == "" ] || [ "$msg" == " " ]; then continue; fi
+	if [[ $msg == "/"* ]]; then
+        eval ${msg:1} > $OUT # I'm fully aware of this backdoor!
+    else
+	    printf "\e[0m`logdate` | $CHATUSER:\e[0m $msg\n" >> $CHATFILE
+    fi
+done

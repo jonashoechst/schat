@@ -1,0 +1,3 @@
+#!/usr/bin/env bash
+CHATFILE=/tmp/.schatlog.main
+tail -f -n 0 $CHATFILE
