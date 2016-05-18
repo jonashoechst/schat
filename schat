@@ -3,7 +3,9 @@
 # variables to customize behaviour
 CHATFILE=/tmp/.schatlog.main
 
-# test sed binary
+# test & alias sed binary
+shopt -s expand_aliases
+
 echo "null" | sed -u "s/n/f/g" >& /dev/null
 if [ $? -eq 0 ]; then alias mysed="sed"; fi
 
@@ -47,7 +49,7 @@ reset () {
     if [ "$1" == "help" ]; then printf "\tReset chat listen process."; return; fi
     if [ $CHAT_PID ]; then disown $CHAT_PID && kill $CHAT_PID; fi
         # line-beginning: move cursor one line up; line-ending: move cursor one line down
-    tail -f -n 1 $CHATFILE | gsed -u 's/^/\r\o033[1A/g; s/$/\o033[1B/g'> $OUT &
+    tail -f -n 1 $CHATFILE | mysed -u 's/^/\r\o033[1A/g; s/$/\o033[1B/g'> $OUT &
     CHAT_PID=$!
 }
 
