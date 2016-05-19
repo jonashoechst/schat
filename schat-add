@@ -1,0 +1,11 @@
+#!/bin/bash
+
+CHATFILE=/tmp/.schatlog.main
+
+logdate () {
+    if [ "$1" == "help" ]; then printf "Print current log time stamp."; return; fi
+    date +"%Y-%m-%d %T"
+}
+
+printf "\e[0m`logdate` | $1: ${*:2}\7\n" | tee -a $CHATFILE
+exit
