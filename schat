@@ -61,8 +61,8 @@ clear () {
 bye () {
     if [ "$1" == "help" ]; then printf "\tGracefully leave this chat."; return; fi
 	disown $CHAT_PID; kill $CHAT_PID
-	printf "\e[1K\rSee you soon, $CHATUSER!\n" > $OUT
-	disown $OUT_PID; kill $OUT_PID
+	printf "\e[1K\rSee you soon, $CHATUSER!\e[0m\n" > $OUT
+	disown $OUT_PID
 	rm -f $OUT
 	printf "\e[1;37m`logdate` | $CHATUSER\e[1;37m left.\n" >> $CHATFILE
     if [ -z $1 ]; then exit 0; fi
