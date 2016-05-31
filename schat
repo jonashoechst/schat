@@ -1,4 +1,5 @@
 #!/bin/bash
+if [ -z $SCRIPT_PATH ]; then SCRIPT_PATH=$(dirname $0); fi
 
 # variables to customize behaviour
 CHATFILE=/tmp/.schatlog.main
@@ -81,7 +82,7 @@ slap () {
 }
 
 trap bye INT
-NAME=$(shuf -n 1 names)
+NAME=$(shuf -n 1 $SCRIPT_PATH/names)
 
 nick $NAME
 printf ">> Welcome to local $HOSTNAME chat, $CHATUSER\e[0m! Enter /help for more...\n\n"
