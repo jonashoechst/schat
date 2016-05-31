@@ -81,14 +81,14 @@ slap () {
 }
 
 trap bye INT
-UUID=$(cat /dev/urandom | tr -dc 'a-z0-9' | fold -w 6 | head -n 1)
+NAME=$(shuf -n 1 names)
 
-nick $UUID # if $1 is empty, this call defaults to system username.
+nick $NAME
 printf ">> Welcome to local $HOSTNAME chat, $CHATUSER\e[0m! Enter /help for more...\n\n"
 printf "\e[1;37m`logdate` | $CHATUSER\e[1;37m joined.\e[0m\n" >> $CHATFILE
 if [ -O $CHATFILE ]; then chmod 666 $CHATFILE; fi
 
-OUT=/tmp/.schat.$UUID.fifo
+OUT=/tmp/.schat.$NAME.fifo
 rm -f $OUT; mkfifo $OUT; cat $OUT &
 OUT_PID=$!
 
