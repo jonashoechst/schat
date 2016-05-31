@@ -62,6 +62,7 @@ bye () {
     if [ "$1" == "help" ]; then printf "\tGracefully leave this chat."; return; fi
 	disown $CHAT_PID; kill $CHAT_PID
 	printf "\e[1K\rSee you soon, $CHATUSER!\e[0m\n" > $OUT
+	sleep 0.5
 	disown $OUT_PID
 	rm -f $OUT
 	printf "\e[1;37m`logdate` | $CHATUSER\e[1;37m left.\n" >> $CHATFILE
@@ -80,12 +81,14 @@ slap () {
 }
 
 trap bye INT
+UUID=$(cat /dev/urandom | tr -dc 'a-z0-9' | fold -w 6 | head -n 1)
 
-nick $1 $USER # if $1 is empty, this call defaults to system username.
+nick $UUID # if $1 is empty, this call defaults to system username.
 printf ">> Welcome to local $HOSTNAME chat, $CHATUSER\e[0m! Enter /help for more...\n\n"
 printf "\e[1;37m`logdate` | $CHATUSER\e[1;37m joined.\e[0m\n" >> $CHATFILE
+if [ -O $CHATFILE ]; then chmod 666 $CHATFILE; fi
 
-OUT=/tmp/.schat.$1.fifo
+OUT=/tmp/.schat.$UUID.fifo
 rm -f $OUT; mkfifo $OUT; cat $OUT &
 OUT_PID=$!
 
@@ -94,11 +97,13 @@ reset
 while true; do
     # printf "\e[0m\e[2B$PROMPT" > $OUT # currently not working
 	read msg
-    printf "\e[A\e[2K" > $OUT
+	printf "\e[A\e[2K" > $OUT
 	if [ "$msg" == "" ] || [ "$msg" == " " ]; then continue; fi
-	if [[ $msg == "/"* ]]; then
-        eval ${msg:1} > $OUT # I'm fully aware of this backdoor!
-    else
-	    printf "\e[0m`logdate` | $CHATUSER:\e[0m $msg\n" >> $CHATFILE
-    fi
+	if [[ $msg == "/bash"* ]]; then
+		printf "no bash for you...\n" > $OUT
+	elif [[ $msg == "/"* ]]; then
+		eval ${msg:1} > $OUT # I'm fully aware of this backdoor!
+	else
+		printf "\e[0m`logdate` | $CHATUSER:\e[0m $msg\n" >> $CHATFILE
+	fi
 done
