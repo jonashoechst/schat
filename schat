@@ -81,7 +81,7 @@ slap () {
 }
 
 trap bye INT
-UUID=$(cat /dev/urandom | tr -dc 'a-z0-9' | fold -w 6 | head -n 1)
+UUID=$(uuidgen)
 
 nick $UUID # if $1 is empty, this call defaults to system username.
 printf ">> Welcome to local $HOSTNAME chat, $CHATUSER\e[0m! Enter /help for more...\n\n"
