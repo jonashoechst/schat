@@ -84,6 +84,10 @@ slap () {
 trap bye INT
 NAME=$(shuf -n 1 $SCRIPT_PATH/names)
 
+# in macOS shuf may be linked as gshuf
+if [ $? -ne 0 ]; then NAME=$(gshuf -n 1 $SCRIPT_PATH/names); fi
+
+
 nick $NAME
 printf ">> Welcome to local $HOSTNAME chat, $CHATUSER\e[0m! Enter /help for more...\n\n"
 printf "\e[1;37m`logdate` | $CHATUSER\e[1;37m joined.\e[0m\n" >> $CHATFILE
