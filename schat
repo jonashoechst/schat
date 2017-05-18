@@ -65,7 +65,7 @@ bye () {
 	sleep 0.5
 	disown $OUT_PID
 	rm -f $OUT
-	printf "\e[1;37m`logdate` | $CHATUSER\e[1;37m left.\n" >> $CHATFILE
+	printf "\e[1;37m`logdate` | $CHATUSER\e[1;37m left.\e[37m.\e[0m\n" >> $CHATFILE
     if [ -z $1 ]; then exit 0; fi
 }
 
