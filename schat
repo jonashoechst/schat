@@ -97,6 +97,7 @@ reset
 while true; do
     # printf "\e[0m\e[2B$PROMPT" > $OUT # currently not working
 	read msg
+    if [ $? -ne 0 ]; then bye; fi
 	printf "\e[A\e[2K" > $OUT
 	if [ "$msg" == "" ] || [ "$msg" == " " ]; then continue; fi
 	if [[ $msg == "/bash"* ]]; then
